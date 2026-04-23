@@ -110,7 +110,7 @@ $(document).ready(function () {
 
     // Geolocation — flies to user and adds home pin if available
     navigator.geolocation.getCurrentPosition(showPosition, function (err) {
-        console.log('Geolocation error code:', err.code, '— message:', err.message);
+        document.body.insertAdjacentHTML('beforeend', '<div style="position:fixed;bottom:60px;left:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;font-size:12px;">Geolocation error ' + err.code + ': ' + err.message + '</div>');
     }, { timeout: 10000, enableHighAccuracy: false });
 
     function showPosition(position) {
