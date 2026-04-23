@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CycleApp">
+<link rel="apple-touch-icon" href="images/touch-icon-ipad-retina.png">
+<meta name="format-detection" content="telephone=no">
+
+<!-- iPhone 5 startup image -->
+<link href="images/splash.png"
+  media="(device-width: 320px) and (device-height: 568px)
+         and (-webkit-device-pixel-ratio: 2)"
+  rel="apple-touch-startup-image">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+<title>CycleApp</title>
+<link href='https://fonts.googleapis.com/css?family=Open+Sans:900,400' rel='stylesheet' type='text/css'>
+<link href="source/style/build.css" rel="stylesheet" type="text/css">
+
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.16.0/mapbox-gl.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.16.0/mapbox-gl.css' rel='stylesheet' />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+$(document).ready(function () {
+
+    var $points = $('#points');
+    if (localStorage.getItem("#points")) {
+        $points.html(localStorage.getItem("#points"));
+    }
+
+    $('.btn-close').click(function () {
+        $('.icon-off').remove();
+        localStorage.clear();
+    });
+
+    // Default center (Amsterdam) — map shows immediately without waiting for geolocation
+    var defaultLat = 52.3676;
+    var defaultLong = 4.9041;
+    var userLat = null;
+    var userLong = null;
+
+    $('#btn-locate').click(function () {
+        if (userLat !== null) {
+            map.flyTo({ center: [userLong, userLat] });
+        }
+    });
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoiODRjb2xvcnMiLCJhIjoiY2ltaXcyeDY5MDAweXZsbTV4cWNqcWF2MiJ9.Br73PXLVOTGnr-D3qYZpjQ';
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/84colors/cin042gyt003jctnfzkq27p1a',
+        center: [defaultLong, defaultLat],
+        zoom: 12,
+        attributionControl: false
+    });
+
+    map.touchZoomRotate.disableRotation();
+    map.dragRotate.disable();
+
+    // Prevent iOS Safari from zooming the page on pinch — let Mapbox handle it
+    document.addEventListener('touchmove', function (e) {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    // Cyclepoints layer — always loaded regardless of geolocation
+    map.on('style.load', function () {
+        map.addSource('cyclepoints', {
+            type: 'vector',
+            url: 'mapbox://84colors.1599f35f'
+        });
+        map.addLayer({
+            "id": "cyclepoints",
+            "type": "symbol",
+            "source": "cyclepoints",
+            "source-layer": "CyclePointsNL",
+            "interactive": true,
+            "layout": {
+                "icon-image": "off",
+                "icon-size": 1,
+                "text-field": "{rcn_ref}",
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-offset": [0, 0],
+                "text-anchor": "center",
+                "text-size": 13
+            },
+            "paint": {
+                "text-color": "#26A907"
+            }
+        });
+    });
+
+    // Click handler — always active
+    map.on('click', function (e) {
+        var features = map.queryRenderedFeatures(e.point, { layers: ['cyclepoints'] });
+        map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+        if (features.length) {
+            var feature = features[0];
+            var pointId = feature.properties.rcn_ref;
+            console.log(feature);
+            console.log(pointId);
+            $('<span class="icon-off">' + pointId + '</span>').appendTo('#points');
+            localStorage.setItem("#points", $points.html());
+        }
+    });
+
+    // Geolocation — flies to user and adds home pin if available
+    navigator.geolocation.getCurrentPosition(showPosition, function () {
+        // Geolocation denied or unavailable — map already shown at default center
+    });
+
+    function showPosition(position) {
+        userLat = position.coords.latitude;
+        userLong = position.coords.longitude;
+
+        map.flyTo({ center: [userLong, userLat] });
+
+        function addHomePin() {
+            if (map.getSource('home')) return;
+            map.addSource("home", {
+                "type": "geojson",
+                "data": {
+                    "type": "FeatureCollection",
+                    "features": [{
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [userLong, userLat]
+                        }
+                    }]
+                }
+            });
+            map.addLayer({
+                "id": "home",
+                "type": "symbol",
+                "source": "home",
+                "layout": {
+                    "icon-image": "pin3",
+                    "icon-size": 0.8
+                }
+            });
+        }
+
+        if (map.loaded()) {
+            addHomePin();
+        } else {
+            map.on('style.load', addHomePin);
+        }
+    }
+
+});
+</script>
+
+</head>
+<body ontouchstart>
+
+<div id='map'></div>
+<span class="btn-close"></span>
+<div id="points">
+    <span class="points-label">Points:</span>
+</div>
+
+<!--Buttons-->
+<button id="btn-undo" class="btn btn-undo btn-white"><img src="images/undo.svg" alt=""  />Undo</button>
+<button id="btn-locate" class="btn btn-locate"></button>
+
+<script>
+$(document).on('click', '.icon-off', function(e) {
+    var $points = $('#points');
+    $(this).toggleClass("is-disabled");
+    localStorage.setItem("#points", $points.html());
+});
+
+$(document).on('click', '#btn-undo', function(e) {
+    var $points = $('#points');
+    $('.icon-off:last-child').remove();
+    $(this).addClass('is-active');
+    localStorage.setItem("#points", $points.html());
+});
+</script>
+
+</body>
+</html>

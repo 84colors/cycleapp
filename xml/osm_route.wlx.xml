@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<weblink xmlns="http://www.garmin.com/xmlschemas/WebLinkExtensions/v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/WebLinkExtensions/v1 http://www.garmin.com/xmlschemas/WebLinkExtensions/v1/WebLinkExtensionsv1.xsd">
+	<displayName>
+		<token xsi:type="Literal_t" content="Cycleway routes on OSM"/>
+	</displayName>
+	<wlxNamespace>www.garmin.com/xmlschemas/WebLinkExtensions/1297807277129</wlxNamespace>
+	<version>1</version>
+	<supportedLanguages>
+		<supportedLanguage>DEU</supportedLanguage>
+		<supportedLanguage>ENU</supportedLanguage>
+		<supportedLanguage>NLD</supportedLanguage>
+	</supportedLanguages>
+	<url>
+		<token xsi:type="Literal_t" content="http://mijndev.openstreetmap.nl/~ligfietser/fiets/?map=route&amp;zoom=18"/>
+		<token xsi:type="Literal_t" content="&amp;lat="/>
+		<token xsi:type="Value_t" format="LAT_DEFAULT"/>
+		<token xsi:type="Literal_t" content="&amp;lon="/>
+		<token xsi:type="Value_t" format="LON_DEFAULT"/>
+
+	</url>
+</weblink>
